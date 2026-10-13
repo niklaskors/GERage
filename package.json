@@ -1,0 +1,11 @@
+{
+  "name": "gerage",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @gerage/web dev",
+    "build": "pnpm --filter @gerage/web build",
+    "typecheck": "pnpm -r typecheck",
+    "deploy": "pnpm build && pnpm --filter @gerage/infra run deploy"
+  }
+}

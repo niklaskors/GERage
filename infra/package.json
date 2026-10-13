@@ -1,0 +1,23 @@
+{
+  "name": "@gerage/infra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "synth": "cdk synth --profile personal",
+    "diff": "cdk diff --all --profile personal",
+    "deploy": "cdk deploy Gerage GerageCertificate --profile personal --outputs-file cdk-outputs.json && node scripts/write-local-config.mjs",
+    "deploy:github-role": "cdk deploy GerageGithubDeploy --profile personal",
+    "deploy:ci": "cdk deploy Gerage GerageCertificate --require-approval never",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.273.0",
+    "constructs": "^10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "aws-cdk": "^2.1145.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

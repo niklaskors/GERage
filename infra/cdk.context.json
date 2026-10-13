@@ -1,0 +1,10 @@
+{
+  "hosted-zone:account=833741619535:domainName=niklaskors.com:region=us-east-1": {
+    "Id": "/hostedzone/Z05705013D8SP19R3S6LB",
+    "Name": "niklaskors.com."
+  },
+  "hosted-zone:account=833741619535:domainName=niklaskors.com:region=eu-central-1": {
+    "Id": "/hostedzone/Z05705013D8SP19R3S6LB",
+    "Name": "niklaskors.com."
+  }
+}
