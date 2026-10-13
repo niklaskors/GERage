@@ -66,17 +66,7 @@ export function CarsPage({ data, tripsByCar, saving, update }: PageProps) {
                 const odometer = trips.at(-1)?.endKm ?? car.startKm;
                 const favourite = car.id === favouriteCarId;
                 return (
-                  <li key={car.id}>
-                    <button
-                      className={favourite ? "star on" : "star"}
-                      aria-pressed={favourite}
-                      aria-label={t("cars.favourite")}
-                      title={favourite ? t("cars.favourite") : t("cars.makeFavourite")}
-                      disabled={saving}
-                      onClick={() => toggleFavourite(car.id)}
-                    >
-                      {favourite ? "★" : "☆"}
-                    </button>
+                  <li key={car.id} className={car.id === editingCarId ? "car-card editing" : "car-card"}>
                     <ColorPicker
                       color={carColor(car, index)}
                       disabled={saving}
@@ -91,36 +81,58 @@ export function CarsPage({ data, tripsByCar, saving, update }: PageProps) {
                       />
                     ) : (
                       <>
-                        <div className="car-info">
-                          <div>
-                            <strong>{car.name}</strong>
-                            {car.plate && <Plate plate={car.plate} />}
-                          </div>
-                          <div className="muted">
-                            {t("cars.tripCount", { count: trips.length })} ·{" "}
-                            {t("cars.lastOdometer", { km: t("units.km", { value: odometer }) })} (
-                            {t("cars.startKmShort", { km: t("units.km", { value: car.startKm }) })})
-                          </div>
+                        <div className="car-title">
+                          <strong>{car.name}</strong>
+                          {car.plate && <Plate plate={car.plate} />}
                         </div>
-                        <button
-                          className="icon"
-                          aria-label={t("cars.edit")}
-                          title={t("cars.edit")}
-                          disabled={saving}
-                          onClick={() => setEditingCarId(car.id)}
-                        >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          className="icon danger"
-                          aria-label={t("cars.delete")}
-                          title={t("cars.delete")}
-                          disabled={saving}
-                          onClick={() => setDeletingCarId(car.id)}
-                        >
-                          <TrashIcon />
-                        </button>
-                        <Link to={`/?car=${car.id}`}>{t("cars.register")}</Link>
+                        <div className="car-stats muted">
+                          <span>{t("cars.tripCount", { count: trips.length })}</span>
+                          <span>
+                            {t("cars.lastOdometer", {
+                              km: t("units.km", { value: odometer }),
+                            })}
+                          </span>
+                          <span>
+                            {t("cars.startKmShort", {
+                              km: t("units.km", { value: car.startKm }),
+                            })}
+                          </span>
+                        </div>
+                        <div className="car-footer">
+                          <div className="car-actions">
+                            <button
+                              className={favourite ? "icon star on" : "icon star"}
+                              aria-pressed={favourite}
+                              aria-label={t("cars.favourite")}
+                              title={favourite ? t("cars.favourite") : t("cars.makeFavourite")}
+                              disabled={saving}
+                              onClick={() => toggleFavourite(car.id)}
+                            >
+                              {favourite ? "★" : "☆"}
+                            </button>
+                            <button
+                              className="icon"
+                              aria-label={t("cars.edit")}
+                              title={t("cars.edit")}
+                              disabled={saving}
+                              onClick={() => setEditingCarId(car.id)}
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              className="icon danger"
+                              aria-label={t("cars.delete")}
+                              title={t("cars.delete")}
+                              disabled={saving}
+                              onClick={() => setDeletingCarId(car.id)}
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                          <Link className="car-register" to={`/?car=${car.id}`}>
+                            {t("cars.register")} →
+                          </Link>
+                        </div>
                       </>
                     )}
                   </li>
