@@ -5,10 +5,11 @@
   "scripts": {
     "synth": "cdk synth --profile personal",
     "diff": "cdk diff --all --profile personal",
-    "deploy": "cdk deploy Gerage GerageCertificate --profile personal --outputs-file cdk-outputs.json && node scripts/write-local-config.mjs",
+    "deploy": "cdk deploy Gerage GerageCertificate GerageEmail --profile personal --outputs-file cdk-outputs.json && node scripts/write-local-config.mjs",
     "deploy:github-role": "cdk deploy GerageGithubDeploy --profile personal",
-    "deploy:ci": "cdk deploy Gerage GerageCertificate --require-approval never",
-    "typecheck": "tsc --noEmit"
+    "deploy:ci": "cdk deploy Gerage GerageCertificate GerageEmail --require-approval never",
+    "typecheck": "tsc --noEmit",
+    "user:add": "./scripts/add-user.sh"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.273.0",

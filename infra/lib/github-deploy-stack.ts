@@ -3,7 +3,10 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import type { Construct } from "constructs";
 
 export type GithubDeployStackProps = StackProps & {
-  /** e.g. niklaskors/GERage */
+  /**
+   * The repo as it appears in GitHub's OIDC `sub` claim. This repo uses immutable subjects
+   * (`owner@ownerId/repo@repoId`), see `gh api repos/<owner>/<repo>/actions/oidc/customization/sub`.
+   */
   repository: string;
   branch: string;
 };

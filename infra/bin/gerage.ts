@@ -1,5 +1,6 @@
 import { App, Tags } from "aws-cdk-lib";
 import { CertificateStack } from "../lib/certificate-stack.ts";
+import { EmailStack } from "../lib/email-stack.ts";
 import { GithubDeployStack } from "../lib/github-deploy-stack.ts";
 import { GerageStack } from "../lib/gerage-stack.ts";
 
@@ -18,7 +19,14 @@ const certificateStack = new CertificateStack(app, "GerageCertificate", {
   zoneName,
 });
 
-new GerageStack(app, "Gerage", {
+const emailStack = new EmailStack(app, "GerageEmail", {
+  env: { account, region: "eu-central-1" },
+  terminationProtection: true,
+  domainName,
+  zoneName,
+});
+
+const gerageStack = new GerageStack(app, "Gerage", {
   env: { account, region: "eu-central-1" },
   crossRegionReferences: true,
   terminationProtection: true,
@@ -26,11 +34,12 @@ new GerageStack(app, "Gerage", {
   zoneName,
   certificate: certificateStack.certificate,
 });
+gerageStack.addDependency(emailStack);
 
 new GithubDeployStack(app, "GerageGithubDeploy", {
   env: { account, region: "eu-central-1" },
   terminationProtection: true,
-  repository: "niklaskors/GERage",
+  repository: "niklaskors@11322526/GERage@1416892861",
   branch: "main",
 });
 

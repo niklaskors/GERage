@@ -60,13 +60,15 @@ export class GerageStack extends Stack {
     new route53.ARecord(this, "AliasRecord", { zone, recordName: props.domainName, target });
     new route53.AaaaRecord(this, "AliasRecordIPv6", { zone, recordName: props.domainName, target });
 
-    // --- User data: one JSON file per user, every save kept as a version ---
+    // --- User data: one JSON file per user, the last 50 saves kept as versions ---
     const dataBucket = new s3.Bucket(this, "DataBucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       versioned: true,
       removalPolicy: RemovalPolicy.RETAIN,
-      lifecycleRules: [{ noncurrentVersionExpiration: Duration.days(365) }],
+      // A rolling window of 50 versions: the current one plus the 49 before it. S3 only counts
+      // versions together with an age, so older ones go once they've been replaced for a day.
+      lifecycleRules: [{ noncurrentVersionExpiration: Duration.days(1), noncurrentVersionsToRetain: 49 }],
       cors: [
         {
           allowedOrigins: [appOrigin, localOrigin],
@@ -84,6 +86,27 @@ export class GerageStack extends Stack {
       signInAliases: { email: true },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       passwordPolicy: { minLength: 12 },
+      // Sent from our own SES domain (see EmailStack) so the mails don't end up in spam.
+      email: cognito.UserPoolEmail.withSES({
+        fromEmail: `no-reply@${props.domainName}`,
+        fromName: "GERage",
+        sesRegion: this.region,
+        sesVerifiedDomain: props.domainName,
+      }),
+      userInvitation: {
+        emailSubject: "You're invited to GERage",
+        emailBody: [
+          "<p>Hi,</p>",
+          "<p>You've been invited to GERage, the app to keep track of your cars and the kilometers you drive.</p>",
+          `<p>Sign in at <a href="${appOrigin}">${props.domainName}</a> with:</p>`,
+          "<p>Email: {username}<br>Temporary password: <b>{####}</b></p>",
+          "<p>You'll choose your own password when you first sign in. The temporary password is valid for 7 days.</p>",
+        ].join("\n"),
+      },
+      userVerification: {
+        emailSubject: "Your GERage verification code",
+        emailBody: "<p>Your GERage verification code is <b>{####}</b>.</p>",
+      },
       removalPolicy: RemovalPolicy.RETAIN,
     });
 

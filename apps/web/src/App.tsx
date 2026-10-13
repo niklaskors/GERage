@@ -1,20 +1,46 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "react-oidc-context";
 import type { Config } from "./config";
-import { newId, type GerageData } from "./data";
+import { CarsPage, type PageProps } from "./CarsPage";
+import { carColor, selectedCar, type CarColor, type GerageData } from "./data";
+import { LanguageSwitch } from "./LanguageSwitch";
+import { Loading } from "./Loading";
+import { UserMenu } from "./UserMenu";
+import { PixelCar, setFavicon } from "./PixelCar";
+import { RegistrationPage } from "./RegistrationPage";
+import { Link, useLocation } from "./router";
 import { Storage, type Snapshot } from "./storage";
+import { logTrips } from "./tripLog";
 
 export function App({ config }: { config: Config }) {
   const auth = useAuth();
+  const { t } = useTranslation();
+  // The logo takes the colour of the selected car once the cars are loaded.
+  const [logoColor, setLogoColor] = useState<CarColor>("blue");
 
-  if (auth.isLoading) return <p className="muted">Loading…</p>;
-  if (auth.error) return <p className="error">Login failed: {auth.error.message}</p>;
+  useEffect(() => setFavicon(logoColor), [logoColor]);
 
-  if (!auth.isAuthenticated || !auth.user) {
+  if (auth.isLoading) return <Loading label={t("app.loading")} />;
+  if (auth.error || !auth.isAuthenticated || !auth.user) {
     return (
-      <main className="center">
-        <h1>GERage</h1>
-        <button onClick={() => auth.signinRedirect()}>Sign in</button>
+      <main className="sign-in">
+        <div className="sign-in-card">
+          <div className="sign-in-car">
+            <Logo />
+          </div>
+          <h1>GERage</h1>
+          <p className="sign-in-tagline">{t("app.tagline")}</p>
+          {auth.error && (
+            <p className="sign-in-error" role="alert">
+              {t("app.loginFailed", { message: auth.error.message })}
+            </p>
+          )}
+          <button className="sign-in-button" onClick={() => auth.signinRedirect()}>
+            {t("app.signIn")}
+          </button>
+        </div>
+        <LanguageSwitch />
       </main>
     );
   }
@@ -29,30 +55,77 @@ export function App({ config }: { config: Config }) {
   };
 
   return (
-    <main>
-      <header>
-        <h1>GERage</h1>
-        <span className="muted">{auth.user.profile.email}</span>
-        <button className="link" onClick={signOut}>
-          Sign out
-        </button>
+    <>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <Link to="/" className="brand">
+            <Logo color={logoColor} />
+            GERage
+          </Link>
+          <Nav />
+          <div className="topbar-actions">
+            <UserMenu email={auth.user.profile.email ?? ""} onSignOut={signOut} />
+          </div>
+        </div>
       </header>
-      <Garage config={config} idToken={auth.user.id_token!} />
-    </main>
+      <main>
+        <Garage config={config} idToken={auth.user.id_token!} onLogoColor={setLogoColor} />
+      </main>
+    </>
   );
 }
 
-function Garage({ config, idToken }: { config: Config; idToken: string }) {
+/** A pixel-art car in 3D, in the colour of the selected car. */
+function Logo({ color = "blue" }: { color?: CarColor }) {
+  return <PixelCar className="logo" color={color} />;
+}
+
+function Nav() {
+  const { t } = useTranslation();
+  const { path } = useLocation();
+  const pages = [
+    { to: "/", label: t("nav.registration") },
+    { to: "/cars", label: t("nav.cars") },
+  ];
+  return (
+    <nav className="tabs">
+      {pages.map((page) => (
+        <Link key={page.to} to={page.to} aria-current={path === page.to ? "page" : undefined}>
+          {page.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function Garage({
+  config,
+  idToken,
+  onLogoColor,
+}: {
+  config: Config;
+  idToken: string;
+  onLogoColor: (color: CarColor) => void;
+}) {
   const [storage, setStorage] = useState<Storage>();
   const [snapshot, setSnapshot] = useState<Snapshot>();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
-  const [selectedCarId, setSelectedCarId] = useState<string>();
+  const { t } = useTranslation();
+  const { path, query } = useLocation();
+
+  const data = snapshot?.data;
+  const car = data && selectedCar(data, query.get("car"));
+  const color = data && car ? carColor(car, data.cars.indexOf(car)) : "blue";
+  useEffect(() => onLogoColor(color), [color, onLogoColor]);
 
   useEffect(() => {
     let cancelled = false;
     Storage.create(config, idToken)
       .then(async (s) => {
+        // In development StrictMode mounts twice; the first mount is cancelled before its
+        // credentials arrive, so this skips a second fetch of the data file.
+        if (cancelled) return;
         const loaded = await s.load();
         if (cancelled) return;
         setStorage(s);
@@ -65,7 +138,7 @@ function Garage({ config, idToken }: { config: Config; idToken: string }) {
   }, [config, idToken]);
 
   if (error) return <p className="error">{error}</p>;
-  if (!storage || !snapshot) return <p className="muted">Loading your cars…</p>;
+  if (!storage || !snapshot) return <Loading label={t("app.loadingCars")} />;
 
   const update = async (change: (data: GerageData) => GerageData) => {
     setSaving(true);
@@ -79,161 +152,9 @@ function Garage({ config, idToken }: { config: Config; idToken: string }) {
     }
   };
 
-  const { cars, readings } = snapshot.data;
-  const selectedCar = cars.find((c) => c.id === selectedCarId) ?? cars[0];
+  const { cars, trips } = snapshot.data;
+  const tripsByCar = new Map(cars.map((car) => [car.id, logTrips(car, trips.filter((trip) => trip.carId === car.id))]));
+  const props: PageProps = { data: snapshot.data, tripsByCar, saving, update };
 
-  return (
-    <>
-      <section>
-        <h2>Cars</h2>
-        <ul className="cars">
-          {cars.map((car) => (
-            <li key={car.id}>
-              <button
-                className={car.id === selectedCar?.id ? "car selected" : "car"}
-                onClick={() => setSelectedCarId(car.id)}
-              >
-                {car.name}
-                {car.plate && <span className="muted"> · {car.plate}</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <AddCarForm
-          disabled={saving}
-          onAdd={(name, plate) => {
-            const id = newId();
-            setSelectedCarId(id);
-            return update((d) => ({ ...d, cars: [...d.cars, { id, name, plate: plate || undefined }] }));
-          }}
-        />
-      </section>
-
-      {selectedCar && (
-        <section>
-          <h2>{selectedCar.name}</h2>
-          <AddReadingForm
-            disabled={saving}
-            onAdd={(date, odometerKm) =>
-              update((d) => ({
-                ...d,
-                readings: [...d.readings, { id: newId(), carId: selectedCar.id, date, odometerKm }],
-              }))
-            }
-          />
-          <ReadingsTable
-            readings={readings.filter((r) => r.carId === selectedCar.id)}
-            disabled={saving}
-            onDelete={(id) => update((d) => ({ ...d, readings: d.readings.filter((r) => r.id !== id) }))}
-          />
-        </section>
-      )}
-    </>
-  );
-}
-
-function AddCarForm({ onAdd, disabled }: { onAdd: (name: string, plate: string) => Promise<void>; disabled: boolean }) {
-  const [name, setName] = useState("");
-  const [plate, setPlate] = useState("");
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    await onAdd(name.trim(), plate.trim());
-    setName("");
-    setPlate("");
-  };
-
-  return (
-    <form onSubmit={submit}>
-      <input placeholder="Name, e.g. Golf" value={name} onChange={(e) => setName(e.target.value)} required />
-      <input placeholder="Plate (optional)" value={plate} onChange={(e) => setPlate(e.target.value)} />
-      <button disabled={disabled}>Add car</button>
-    </form>
-  );
-}
-
-function AddReadingForm({
-  onAdd,
-  disabled,
-}: {
-  onAdd: (date: string, odometerKm: number) => Promise<void>;
-  disabled: boolean;
-}) {
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [km, setKm] = useState("");
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    await onAdd(date, Number(km));
-    setKm("");
-  };
-
-  return (
-    <form onSubmit={submit}>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        placeholder="Odometer (km)"
-        value={km}
-        onChange={(e) => setKm(e.target.value)}
-        required
-      />
-      <button disabled={disabled}>Add reading</button>
-    </form>
-  );
-}
-
-function ReadingsTable({
-  readings,
-  onDelete,
-  disabled,
-}: {
-  readings: GerageData["readings"];
-  onDelete: (id: string) => void;
-  disabled: boolean;
-}) {
-  if (readings.length === 0) return <p className="muted">No readings yet.</p>;
-
-  const sorted = [...readings].sort((a, b) => a.date.localeCompare(b.date) || a.odometerKm - b.odometerKm);
-  const total = sorted.at(-1)!.odometerKm - sorted[0].odometerKm;
-
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th className="num">Odometer</th>
-          <th className="num">Driven</th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>
-        {sorted
-          .map((r, i) => ({ ...r, driven: i === 0 ? null : r.odometerKm - sorted[i - 1].odometerKm }))
-          .reverse()
-          .map((r) => (
-            <tr key={r.id}>
-              <td>{r.date}</td>
-              <td className="num">{r.odometerKm.toLocaleString()} km</td>
-              <td className="num">{r.driven === null ? "–" : `${r.driven.toLocaleString()} km`}</td>
-              <td>
-                <button className="link" disabled={disabled} onClick={() => onDelete(r.id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td>Total</td>
-          <td />
-          <td className="num">{total.toLocaleString()} km</td>
-          <td />
-        </tr>
-      </tfoot>
-    </table>
-  );
+  return path === "/cars" ? <CarsPage {...props} /> : <RegistrationPage {...props} />;
 }

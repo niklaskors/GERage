@@ -6,6 +6,7 @@
     "dev": "pnpm --filter @gerage/web dev",
     "build": "pnpm --filter @gerage/web build",
     "typecheck": "pnpm -r typecheck",
-    "deploy": "pnpm build && pnpm --filter @gerage/infra run deploy"
+    "deploy": "pnpm build && pnpm --filter @gerage/infra run deploy",
+    "user:add": "pnpm --filter @gerage/infra run user:add"
   }
 }

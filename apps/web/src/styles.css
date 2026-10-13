@@ -5,6 +5,11 @@
   --border: #ddd;
   --accent: #2563eb;
   --error: #b91c1c;
+  --surface: #fff;
+  --warning: #d97706;
+  --success: #15803d;
+  --track: rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 1px 1px rgb(0 0 0 / 0.04);
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
 }
@@ -17,6 +22,11 @@
     --border: #333;
     --accent: #60a5fa;
     --error: #f87171;
+    --surface: #262626;
+    --warning: #f59e0b;
+    --success: #4ade80;
+    --track: rgb(255 255 255 / 0.07);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -27,14 +37,9 @@ body {
 }
 
 main {
-  max-width: 40rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: 1rem;
-}
-
-main.center {
-  text-align: center;
-  padding-top: 20vh;
 }
 
 header {
@@ -45,6 +50,107 @@ header {
 
 header h1 {
   margin-right: auto;
+}
+
+/* Top bar: brand, page tabs, and language + account on the right. */
+header.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: block;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+/* Pixel art: draw the 32×22 car at whole multiples, so every pixel stays square. */
+.brand .logo {
+  width: 32px;
+  height: 22px;
+  flex: none;
+}
+
+nav.tabs {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+nav.tabs a {
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+nav.tabs a:hover {
+  color: var(--fg);
+}
+
+nav.tabs a[aria-current="page"] {
+  color: var(--fg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+nav.tabs a:focus-visible,
+.brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* Phones: tabs get their own full-width row. */
+@media (max-width: 40rem) {
+  .topbar-inner {
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+  }
+
+  nav.tabs {
+    order: 1;
+    flex: 1 0 100%;
+  }
+
+  nav.tabs a {
+    flex: 1;
+  }
 }
 
 form {
@@ -87,25 +193,6 @@ button.link {
   padding: 0;
 }
 
-.cars {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-button.car {
-  background: none;
-  color: inherit;
-  border-color: var(--border);
-}
-
-button.car.selected {
-  border-color: var(--accent);
-  outline: 1px solid var(--accent);
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -134,4 +221,1353 @@ tfoot td {
 
 .error {
   color: var(--error);
+}
+
+h2 .muted {
+  font-weight: normal;
+}
+
+/* Trip form: a card with the type toggle, odometer, route and optional details. */
+.trip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.trip-form-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.trip-form-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.trip-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.trip-form-row.odometer {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Top-aligned: the suggestions under "Naar" make that column taller. */
+.trip-form-row.route {
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+}
+
+.trip-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.trip-form input {
+  flex: none;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 1rem;
+  font-weight: normal;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.trip-form input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+button.swap {
+  width: 2.4rem;
+  height: 2.4rem;
+  /* Level with the inputs, below their labels. */
+  margin-top: 1.4rem;
+  padding: 0;
+  border-color: var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+button.swap:hover {
+  color: var(--fg);
+  background: var(--track);
+}
+
+/* Business / private: a pill toggle like the page tabs. */
+.segmented {
+  display: inline-flex;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.segmented label {
+  display: block;
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented span {
+  display: block;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.segmented input:checked + span {
+  color: var(--fg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.trip-form details summary {
+  width: fit-content;
+  color: var(--accent);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.trip-form details[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.trip-form .error {
+  margin: 0;
+}
+
+.trip-form .actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.trip-form .driven {
+  margin-right: auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-form button.primary,
+.trip-form button.secondary {
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.trip-form button.secondary {
+  border-color: var(--border);
+  background: none;
+  color: inherit;
+}
+
+@media (max-width: 40rem) {
+  .trip-form {
+    padding: 1rem;
+  }
+
+  .trip-form-row,
+  .trip-form-row.odometer {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trip-form-row.route {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sits on the line between from and to instead of taking its own row. */
+  button.swap {
+    justify-self: end;
+    width: 2rem;
+    height: 2rem;
+    margin: -0.6rem 0.5rem -1.1rem 0;
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    transform: rotate(90deg);
+  }
+
+  .trip-form-row:not(.odometer, .route) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+
+/* Dutch license plate: yellow, black text, blue EU strip with NL. */
+.plate {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  background: #f7c600;
+  color: #111;
+  border: 1px solid #111;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.plate-eu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.15rem 0.2rem;
+  background: #003399;
+  color: white;
+  font-family: system-ui, sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0;
+}
+
+.plate-eu svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.plate-text {
+  padding: 0.25rem 0.45rem;
+  align-self: center;
+}
+
+h2 .plate {
+  margin-left: 0.5rem;
+}
+
+.plate-input {
+  flex: 0 0 9.5rem;
+  font-size: 1.15rem;
+}
+
+.plate-input input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.plate-input input::placeholder {
+  color: rgb(0 0 0 / 35%);
+}
+
+.plate-input:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.plate-input input:focus {
+  outline: none;
+}
+
+.plate-input:has(input:not(:placeholder-shown):invalid) {
+  outline: 2px solid var(--error);
+}
+
+.language-switch {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-self: center;
+}
+
+.language-switch button {
+  display: flex;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  opacity: 0.45;
+  filter: grayscale(0.6);
+  transition:
+    opacity 0.15s,
+    filter 0.15s;
+}
+
+.language-switch button:hover,
+.language-switch button[aria-pressed="true"] {
+  opacity: 1;
+  filter: none;
+}
+
+.language-switch button[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.language-switch svg {
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+
+/* Sign-in: a card in the middle of the screen, with the logo car parked on a strip of road. */
+main.sign-in {
+  max-width: none;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(60rem 30rem at 50% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg);
+}
+
+.sign-in-card {
+  width: 100%;
+  max-width: 22rem;
+  box-sizing: border-box;
+  padding: 2.25rem 2rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow:
+    var(--shadow),
+    0 12px 32px -12px rgb(0 0 0 / 0.18);
+  text-align: center;
+  animation: sign-in-rise 0.4s ease-out;
+}
+
+.sign-in-car {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 6px;
+  margin-bottom: 1.25rem;
+  background: repeating-linear-gradient(90deg, var(--muted) 0 12px, transparent 12px 24px) bottom / 100% 2px
+    no-repeat;
+}
+
+/* Pixel art: three times the 32×22 grid, so every pixel stays square. */
+.sign-in-car .logo {
+  width: 96px;
+  height: 66px;
+  animation: sign-in-drive 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sign-in-card h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sign-in-tagline {
+  margin: 0.4rem 0 1.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.sign-in-error {
+  margin: -0.75rem 0 1.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  color: var(--error);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+button.sign-in-button {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+
+button.sign-in-button:hover {
+  filter: brightness(1.08);
+}
+
+button.sign-in-button:active {
+  transform: translateY(1px);
+}
+
+button.sign-in-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+main.sign-in .language-switch {
+  gap: 1rem;
+}
+
+@keyframes sign-in-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes sign-in-drive {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-in-card,
+  .sign-in-car .logo {
+    animation: none;
+  }
+}
+
+.car-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.car-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.car-list .car-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.car-list .plate {
+  margin-left: 0.5rem;
+}
+
+.color-picker {
+  position: relative;
+  flex: none;
+}
+
+/* The car icon is 32×22 pixels; draw it at twice that, unsmoothed. */
+button.car-avatar {
+  display: block;
+  padding: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+}
+
+button.car-avatar:hover:not(:disabled),
+button.car-avatar[aria-expanded="true"] {
+  border-color: var(--border);
+  background: var(--track);
+}
+
+button.car-avatar svg {
+  display: block;
+  width: 64px;
+  height: 44px;
+}
+
+.swatches {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(5, 1.75rem);
+  gap: 0.4rem;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+}
+
+button.swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 0.25);
+  border-radius: 50%;
+}
+
+/* The last swatch opens the browser's colour picker for any other colour. */
+label.swatch {
+  position: relative;
+  box-sizing: border-box;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgb(0 0 0 / 0.25);
+  border-radius: 50%;
+  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  cursor: pointer;
+}
+
+label.swatch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+label.swatch.on {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.star {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+button.star.on {
+  color: #e8a600;
+}
+
+.car-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.car-picker label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.car-picker select {
+  font: inherit;
+  font-weight: normal;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: inherit;
+  max-width: 100%;
+}
+
+.car-picker a {
+  margin-left: auto;
+}
+
+button.export {
+  display: block;
+  margin: 0 0 0.5rem auto;
+}
+
+/* Suggestions from earlier trips: usual km, typo fixes and frequent destinations. */
+.trip-form button.hint-button {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.trip-form button.hint-button:hover {
+  text-decoration: underline;
+}
+
+.destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.destinations button {
+  padding: 0.2rem 0.65rem;
+  border-color: var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--fg);
+  font-size: 0.875rem;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.destinations button:hover {
+  background: var(--track);
+}
+
+.destinations button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.destinations small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Likely mistakes: shown, never blocking. */
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.warnings li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--warning);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  font-size: 0.9rem;
+}
+
+.warnings button.link {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Km filled in from earlier trips on the route: looks suggested until it's typed over. */
+.trip-form input.suggested {
+  border-style: dashed;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+.trip-form small.hint {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+/* Excel import and export. */
+button.secondary {
+  border-color: var(--border);
+  background: none;
+  color: inherit;
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--track);
+}
+
+.excel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.import-preview {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.import-preview h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.import-preview > ul {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+
+.import-preview > ul > li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.15s;
+}
+
+.import-preview > ul > li.off {
+  opacity: 0.55;
+}
+
+/* Checkbox in its own column; title, details and the "replaces" note line up next to it. */
+.import-car {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75rem;
+  row-gap: 0.2rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.import-car input[type="checkbox"] {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.import-car > :not(input) {
+  grid-column: 2;
+}
+
+.import-car-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.import-car-title .plate {
+  font-size: 0.8rem;
+}
+
+.chip {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--track);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.import-car-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-car-replaces {
+  justify-self: start;
+  margin-top: 0.2rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warning);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Lines up with the text, past the checkbox column. */
+.import-fixes {
+  margin: 0.4rem 0 0 1.85rem;
+  font-size: 0.85rem;
+}
+
+.import-fixes summary {
+  width: fit-content;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.import-fixes ul {
+  margin: 0.4rem 0 0;
+  padding: 0.5rem 0.75rem 0.5rem 1.6rem;
+  border-left: 3px solid var(--warning);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+  color: var(--fg);
+}
+
+.warning-text {
+  color: var(--warning);
+}
+
+.success {
+  color: var(--success);
+}
+
+/* Edit / delete icons at the end of a trip row. */
+td.row-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+button.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  vertical-align: middle;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+button.icon + button.icon {
+  margin-left: 0.15rem;
+}
+
+button.icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+button.icon:hover:not(:disabled) {
+  color: var(--fg);
+  background: var(--track);
+}
+
+button.icon.danger:hover:not(:disabled) {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+}
+
+button.icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Add / edit car: labelled fields in a row that wraps. */
+.car-form {
+  flex: 1;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.car-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 10rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.car-form label:has(.plate-input) {
+  flex: 0 0 auto;
+}
+
+.car-form label > input {
+  flex: none;
+  font-size: 1rem;
+  font-weight: normal;
+  color: var(--fg);
+}
+
+.car-form .plate-input input {
+  color: #111;
+}
+
+.car-form .actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.car-form.editing {
+  margin: 0;
+}
+
+.car-form button.primary,
+.car-form button.secondary {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.car-form button.secondary {
+  border-color: var(--border);
+  background: none;
+  color: inherit;
+}
+
+.car-form .plate-input {
+  flex: none;
+  width: 9.5rem;
+  height: 2.35rem;
+}
+
+/* A note about one field, under it: e.g. "Van" differs from where the previous trip ended. */
+.trip-form .field-note {
+  color: var(--warning);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.trip-form .field-note button.hint-button {
+  display: inline;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+/* Drawer: slides in from the right over a dimmed page; a bottom sheet on phones. */
+dialog.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(34rem, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.18);
+  animation: drawer-in 0.22s ease-out;
+}
+
+dialog.drawer::backdrop {
+  background: rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(2px);
+  animation: backdrop-in 0.22s ease-out;
+}
+
+/* The page behind doesn't scroll while the drawer is open. */
+html:has(dialog.drawer[open]) {
+  overflow: hidden;
+}
+
+.drawer-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.drawer-header p {
+  margin: 0.2rem 0 0;
+  font-size: 0.875rem;
+}
+
+button.drawer-close {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+button.drawer-close:hover {
+  background: var(--track);
+  color: var(--fg);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+/* The form is the drawer's whole content, so it drops its own card look. */
+.drawer .trip-form {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.drawer .trip-form .actions {
+  flex-wrap: wrap;
+}
+
+.drawer .trip-form .driven {
+  flex-basis: 100%;
+}
+
+.drawer .trip-form button.danger {
+  margin-right: auto;
+}
+
+.trip-form button.danger {
+  padding: 0.55rem 1rem;
+  border-color: transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.trip-form button.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 40rem) {
+  dialog.drawer {
+    inset: auto 0 0 0;
+    width: 100vw;
+    height: auto;
+    max-height: 92dvh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 32px rgb(0 0 0 / 0.18);
+    animation-name: sheet-in;
+  }
+
+  .drawer-panel {
+    max-height: 92dvh;
+  }
+
+  /* Cancel and save side by side, delete below them. */
+  .drawer .trip-form button.secondary,
+  .drawer .trip-form button.primary {
+    flex: 1;
+  }
+
+  .drawer .trip-form button.danger {
+    order: 1;
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.drawer,
+  dialog.drawer::backdrop,
+  dialog.confirm,
+  dialog.confirm::backdrop {
+    animation: none;
+  }
+}
+
+/* Account menu: avatar + language flag, opening a panel with the account, language and sign out. */
+.user-menu {
+  position: relative;
+}
+
+button.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.45rem 0.2rem 0.2rem;
+  border-color: var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+button.user-menu-trigger:hover,
+button.user-menu-trigger[aria-expanded="true"] {
+  border-color: var(--muted);
+  background: var(--track);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.user-menu .flag svg {
+  display: block;
+  width: 1.3rem;
+  height: 0.87rem;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+
+.user-menu .chevron {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.user-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 20;
+  width: max-content;
+  min-width: 14rem;
+  max-width: min(20rem, calc(100vw - 2rem));
+  padding: 0.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 0.15),
+    var(--shadow);
+}
+
+.user-menu-account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.65rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.user-menu-account strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.user-menu-group {
+  padding: 0.35rem 0;
+  border-block: 1px solid var(--border);
+  margin-bottom: 0.35rem;
+}
+
+.user-menu-heading {
+  padding: 0.25rem 0.65rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.user-menu-panel button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--fg);
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.user-menu-panel button:hover,
+.user-menu-panel button:focus-visible {
+  background: var(--track);
+  outline: none;
+}
+
+.user-menu-panel .check {
+  width: 1rem;
+  height: 1rem;
+  margin-left: auto;
+  color: var(--accent);
+}
+
+.user-menu-panel button.sign-out {
+  color: var(--error);
+}
+
+/* Edit drawer: what saving does to the readings of other trips. */
+.trip-form .impact {
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  font-size: 0.9rem;
+}
+
+.trip-form .impact p {
+  margin: 0;
+}
+
+.trip-form .impact p + p {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Confirmation dialog: centred over a dimmed page. */
+dialog.confirm {
+  width: min(26rem, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+  animation: backdrop-in 0.15s ease-out;
+}
+
+dialog.confirm::backdrop {
+  background: rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(2px);
+  animation: backdrop-in 0.15s ease-out;
+}
+
+html:has(dialog.confirm[open]) {
+  overflow: hidden;
+}
+
+.confirm-panel {
+  padding: 1.25rem;
+}
+
+.confirm-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.confirm-body p {
+  margin: 0 0 0.6rem;
+}
+
+.confirm-subject {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.confirm-warning {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  color: var(--error);
+  font-weight: 600;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.confirm-actions button {
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.confirm-actions button.secondary {
+  border-color: var(--border);
+  background: none;
+  color: inherit;
+}
+
+.confirm-actions button.danger {
+  border-color: var(--error);
+  background: var(--error);
+  /* White on light mode's dark red, near-black on dark mode's light red. */
+  color: var(--surface);
 }

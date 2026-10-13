@@ -1,7 +1,8 @@
 import { GetObjectCommand, PutObjectCommand, S3Client, S3ServiceException } from "@aws-sdk/client-s3";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import type { Config } from "./config";
-import { emptyData, type GerageData } from "./data";
+import { emptyData, migrate, type GerageData } from "./data";
+import i18n from "./i18n";
 
 export type Snapshot = { data: GerageData; etag: string | null };
 
@@ -33,7 +34,7 @@ export class Storage {
   async load(): Promise<Snapshot> {
     try {
       const res = await this.s3.send(new GetObjectCommand({ Bucket: this.bucket, Key: this.key }));
-      const data = JSON.parse(await res.Body!.transformToString()) as GerageData;
+      const data = migrate(JSON.parse(await res.Body!.transformToString()));
       return { data, etag: res.ETag ?? null };
     } catch (err) {
       if (err instanceof S3ServiceException && err.name === "NoSuchKey") {
@@ -68,7 +69,7 @@ export class Storage {
         snapshot = await this.load();
       }
     }
-    throw new Error("Could not save: the data kept changing on another device. Please try again.");
+    throw new Error(i18n.t("errors.saveConflict"));
   }
 }
 

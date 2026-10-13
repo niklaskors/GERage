@@ -1,12 +1,73 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <title>GERage</title>
+    <!-- Inline, so the spinner and dark background show before the app and styles.css have loaded. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+
+      /* Fallback for --accent, which styles.css defines once it has loaded. */
+      :root {
+        --loading-accent: #2563eb;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --loading-accent: #60a5fa;
+        }
+
+        body {
+          background: #161616;
+        }
+      }
+
+      /* Centered on the screen; the sticky top bar stays visible above it. */
+      .loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .spinner {
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 3px solid color-mix(in srgb, var(--accent, var(--loading-accent)) 18%, transparent);
+        border-top-color: var(--accent, var(--loading-accent));
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(1turn);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation-duration: 2s;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loading" role="status"><span class="spinner" aria-hidden="true"></span></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
