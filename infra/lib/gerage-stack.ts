@@ -97,18 +97,18 @@ export class GerageStack extends Stack {
         sesVerifiedDomain: props.domainName,
       }),
       userInvitation: {
-        emailSubject: "You're invited to GERage",
+        emailSubject: "Je bent uitgenodigd voor GERage",
         emailBody: [
-          "<p>Hi,</p>",
-          "<p>You've been invited to GERage, the app to keep track of your cars and the kilometers you drive.</p>",
-          `<p>Sign in at <a href="${appOrigin}">${props.domainName}</a> with:</p>`,
-          "<p>Email: {username}<br>Temporary password: <b>{####}</b></p>",
-          "<p>You'll choose your own password when you first sign in. The temporary password is valid for 7 days.</p>",
+          "<p>Hoi,</p>",
+          "<p>Je bent uitgenodigd voor GERage, de app om je auto's en de gereden kilometers bij te houden.</p>",
+          `<p>Log in op <a href="${appOrigin}">${props.domainName}</a> met:</p>`,
+          "<p>E-mail: {username}<br>Tijdelijk wachtwoord: <b>{####}</b></p>",
+          "<p>Bij de eerste keer inloggen kies je zelf een wachtwoord. Het tijdelijke wachtwoord is 7 dagen geldig.</p>",
         ].join("\n"),
       },
       userVerification: {
-        emailSubject: "Your GERage verification code",
-        emailBody: "<p>Your GERage verification code is <b>{####}</b>.</p>",
+        emailSubject: "Je verificatiecode voor GERage",
+        emailBody: "<p>Je verificatiecode voor GERage is <b>{####}</b>.</p>",
       },
       removalPolicy: RemovalPolicy.RETAIN,
     });
