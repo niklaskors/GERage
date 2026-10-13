@@ -1091,6 +1091,98 @@ button.icon:focus-visible {
   outline-offset: 1px;
 }
 
+/* Phones: each trip is a card instead of a wide table row that scrolls sideways. */
+@media (max-width: 40rem) {
+  .trip-table,
+  .trip-table tbody {
+    display: block;
+  }
+
+  .trip-table thead {
+    display: none;
+  }
+
+  .trip-table tr {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: 0.2rem 0.5rem;
+    padding: 0.6rem 0.4rem 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .trip-table tr + tr {
+    margin-top: 0.5rem;
+  }
+
+  .trip-table td {
+    padding: 0;
+    border: none;
+    text-align: left;
+  }
+
+  .trip-table td:empty {
+    display: none;
+  }
+
+  .trip-table td.date {
+    grid-area: 1 / 1;
+    font-weight: 600;
+  }
+
+  .trip-table td.number {
+    grid-area: 1 / 2;
+    color: var(--muted);
+  }
+
+  .trip-table td.number::before {
+    content: "#";
+  }
+
+  .trip-table td.purpose {
+    grid-area: 1 / 3;
+    justify-self: start;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: var(--track);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .trip-table td.km {
+    grid-area: 1 / 4;
+    justify-self: end;
+    padding-right: 0.35rem;
+    font-weight: 600;
+  }
+
+  .trip-table td.route {
+    grid-column: 1 / -1;
+    overflow-wrap: anywhere;
+  }
+
+  .trip-table td.note {
+    grid-column: 1 / -1;
+    color: var(--muted);
+  }
+
+  .trip-table td.odometer {
+    grid-row: 4;
+    grid-column: 1 / 4;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .trip-table td.row-actions {
+    grid-row: 4;
+    grid-column: 4;
+    width: auto;
+  }
+}
+
 /* Add / edit car: labelled fields in a row that wraps. */
 .car-form {
   flex: 1;

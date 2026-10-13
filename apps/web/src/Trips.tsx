@@ -385,7 +385,7 @@ export function TripTable({
 
   return (
     <div className="scroll">
-      <table>
+      <table className="trip-table">
         <thead>
           <tr>
             <th>{t("trips.table.date")}</th>
@@ -424,19 +424,19 @@ function TripRows({
   return (
     <>
       <tr>
-        <td className="nowrap">{trip.date}</td>
-        <td className="num">{trip.number}</td>
-        <td className="num nowrap">
+        <td className="date nowrap">{trip.date}</td>
+        <td className="number num">{trip.number}</td>
+        <td className="odometer num nowrap">
           {t("units.number", { value: trip.startKm })} – {t("units.number", { value: trip.endKm })}
         </td>
-        <td className="num nowrap">{km(trip.km)}</td>
-        <td>
+        <td className="km num nowrap">{km(trip.km)}</td>
+        <td className="route">
           {/* Van and Naar are optional; a dash marks the one left empty. */}
           {(trip.from || trip.to) && `${trip.from || "–"} → ${trip.to || "–"}`}
           {trip.detour && <div className="muted">{t("trips.table.detour", { detour: trip.detour })}</div>}
         </td>
-        <td>{t(`purpose.${trip.purpose}`)}</td>
-        <td>{trip.note}</td>
+        <td className="purpose">{t(`purpose.${trip.purpose}`)}</td>
+        <td className="note">{trip.note}</td>
         <td className="row-actions">
           <button
             className="icon"
