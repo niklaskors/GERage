@@ -11,9 +11,23 @@ export type TripFields = Omit<Trip, "id" | "carId">;
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** Whether the km field takes the km driven or the odometer reading after the trip. */
+type KmMode = "driven" | "reading";
+
+const KM_MODE_KEY = "gerage.kmMode";
+
+function storedKmMode(): KmMode {
+  try {
+    return localStorage.getItem(KM_MODE_KEY) === "reading" ? "reading" : "driven";
+  } catch {
+    return "driven";
+  }
+}
+
 /**
- * Adds a trip, or edits `editing`. Only the km driven is entered: the odometer readings follow
- * from `startKm`, where the previous trip ended. Like the spreadsheet, a new trip starts at the
+ * Adds a trip, or edits `editing`. Either the km driven or the odometer reading after the trip is
+ * entered; only the km driven is stored, and the readings follow from `startKm`, where the
+ * previous trip ended. Like the spreadsheet, a new trip starts at the
  * previous trip's destination. `history` (all trips, of all cars) is used to suggest destinations
  * and the km for a route driven before, and to warn about likely mistakes.
  */
@@ -35,7 +49,8 @@ export function TripForm({
   addresses: string[];
   history: Trip[];
   disabled: boolean;
-  onSave: (trip: TripFields) => Promise<void>;
+  /** `returnTrip` is the way back, when "with return trip" is ticked (only for new trips). */
+  onSave: (trip: TripFields, returnTrip?: TripFields) => Promise<void>;
   onCancel: () => void;
   /** Only when editing: shows a delete button. */
   onDelete?: () => void;
@@ -45,13 +60,16 @@ export function TripForm({
   const [date, setDate] = useState(editing?.date ?? today());
   const [from, setFrom] = useState(editing?.from ?? previous?.to ?? "");
   const [to, setTo] = useState(editing?.to ?? "");
-  const [km, setKm] = useState(editing ? String(editing.km) : "");
+  const [kmMode, setKmMode] = useState(storedKmMode);
+  /** What's typed in the km field: km driven or the reading after the trip, depending on `kmMode`. */
+  const [km, setKm] = useState(editing ? String(kmMode === "reading" ? editing.endKm : editing.km) : "");
   /** Until km is typed, it follows the usual km for the route. */
   const [kmTyped, setKmTyped] = useState(Boolean(editing));
   const [purpose, setPurpose] = useState<Purpose>(editing?.purpose ?? previous?.purpose ?? "business");
   const [detour, setDetour] = useState(editing?.detour ?? "");
   const [note, setNote] = useState(editing?.note ?? "");
   const [showMore, setShowMore] = useState(Boolean(editing?.detour || editing?.note));
+  const [withReturn, setWithReturn] = useState(false);
   const toInput = useRef<HTMLInputElement>(null);
   const detourInput = useRef<HTMLInputElement>(null);
   const { t, i18n } = useTranslation();
@@ -64,19 +82,32 @@ export function TripForm({
   const otherTrips = history.filter((trip) => trip.id !== editing?.id);
   const destinations = routesFrom(otherTrips, from).slice(0, 4);
   const route = findRoute(otherTrips, from, to);
+  // Where this trip starts depends on its date (when editing), not on its own km.
+  const tripStartKm = impactOf && date ? impactOf({ date, km: 0 }).startKm : startKm;
   const kmSuggested = !kmTyped && route !== undefined;
-  const kmValue = kmSuggested ? String(route.km) : km;
-  const driven = Number(kmValue);
+  const kmValue = kmSuggested ? String(kmMode === "reading" ? tripStartKm + route.km : route.km) : km;
+  const driven = kmMode === "reading" ? Number(kmValue) - tripStartKm : Number(kmValue);
   const fromTypo = similarAddress(from, addresses);
   const toTypo = similarAddress(to, addresses);
   const impact = impactOf && kmValue !== "" && date ? impactOf({ date, km: driven }) : undefined;
-  const tripStartKm = impact?.startKm ?? startKm;
+
+  /** Switches what the km field takes, converting what's typed so the trip stays the same. */
+  const switchKmMode = () => {
+    const next: KmMode = kmMode === "driven" ? "reading" : "driven";
+    if (kmTyped && km !== "") setKm(String(next === "reading" ? tripStartKm + driven : driven));
+    setKmMode(next);
+    try {
+      localStorage.setItem(KM_MODE_KEY, next);
+    } catch {
+      // Not remembered then; the switch still works.
+    }
+  };
   // A trip normally starts where the previous one ended; shown under "Van" since that's what it's about.
   const previousEnd = !editing && previous?.to && from.trim() !== previous.to && !fromTypo ? previous.to : undefined;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSave({
+    const trip = {
       date,
       km: driven,
       from: from.trim(),
@@ -84,10 +115,14 @@ export function TripForm({
       purpose,
       detour: detour.trim() || undefined,
       note: note.trim() || undefined,
-    });
+    };
+    // The way back: same day, km and type; a detour or note was about the way there.
+    const back = withReturn ? { date, km: driven, from: trip.to, to: trip.from, purpose } : undefined;
+    await onSave(trip, back);
     if (editing) return;
     // The next trip usually starts where this one ended.
-    setFrom(to.trim());
+    setFrom(back ? back.to : trip.to);
+    setWithReturn(false);
     setTo("");
     setKm("");
     setKmTyped(false);
@@ -149,7 +184,7 @@ export function TripForm({
       <div className="trip-form-row route">
         <label>
           {t("trips.form.from")}
-          <input list={addressList} value={from} onChange={(e) => setFrom(e.target.value)} required />
+          <input list={addressList} value={from} onChange={(e) => setFrom(e.target.value)} />
           {fromTypo && (
             <button type="button" className="hint-button" onClick={() => setFrom(fromTypo)}>
               {t("trips.hints.didYouMean", { address: fromTypo })}
@@ -178,7 +213,7 @@ export function TripForm({
         </button>
         <label>
           {t("trips.form.to")}
-          <input ref={toInput} list={addressList} value={to} onChange={(e) => setTo(e.target.value)} required />
+          <input ref={toInput} list={addressList} value={to} onChange={(e) => setTo(e.target.value)} />
           {toTypo && (
             <button type="button" className="hint-button" onClick={() => setTo(toTypo)}>
               {t("trips.hints.didYouMean", { address: toTypo })}
@@ -211,12 +246,12 @@ export function TripForm({
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </label>
         <label>
-          {t("trips.form.km")}
+          {kmMode === "reading" ? t("trips.form.reading") : t("trips.form.km")}
           <input
             className={kmSuggested ? "suggested" : undefined}
             type="number"
             inputMode="numeric"
-            min={0}
+            min={kmMode === "reading" ? tripStartKm : 0}
             step={1}
             value={kmValue}
             onChange={(e) => {
@@ -225,12 +260,18 @@ export function TripForm({
             }}
             required
           />
+          {kmMode === "reading" && kmValue !== "" && driven >= 0 && (
+            <small className="hint">{t("trips.hints.drivenFromReading", { km: kmText(driven) })}</small>
+          )}
           {kmSuggested && <small className="hint">{t("trips.hints.kmFromRoute")}</small>}
-          {kmTyped && route && kmValue !== String(route.km) && (
+          {kmTyped && route && driven !== route.km && (
             <button type="button" className="hint-button" onClick={() => setKmTyped(false)}>
               {t("trips.hints.usualKm", { km: kmText(route.km) })}
             </button>
           )}
+          <button type="button" className="hint-button" onClick={switchKmMode}>
+            {kmMode === "reading" ? t("trips.form.enterKm") : t("trips.form.enterReading")}
+          </button>
         </label>
       </div>
 
@@ -293,11 +334,23 @@ export function TripForm({
 
       <div className="actions">
         <span className="driven" aria-live="polite">
-          {t("trips.form.odometer", {
-            start: t("units.number", { value: tripStartKm }),
-            end: kmValue === "" ? "…" : t("units.number", { value: tripStartKm + driven }),
-          })}
+          {withReturn
+            ? t("trips.form.odometerWithReturn", {
+                start: t("units.number", { value: tripStartKm }),
+                end: kmValue === "" ? "…" : t("units.number", { value: tripStartKm + driven }),
+                back: kmValue === "" ? "…" : t("units.number", { value: tripStartKm + 2 * driven }),
+              })
+            : t("trips.form.odometer", {
+                start: t("units.number", { value: tripStartKm }),
+                end: kmValue === "" ? "…" : t("units.number", { value: tripStartKm + driven }),
+              })}
         </span>
+        {!editing && (
+          <label className="check">
+            <input type="checkbox" checked={withReturn} onChange={(e) => setWithReturn(e.target.checked)} />
+            {t("trips.form.withReturn")}
+          </label>
+        )}
         {onDelete && (
           <button type="button" className="danger" disabled={disabled} onClick={onDelete}>
             {t("trips.table.delete")}
@@ -309,7 +362,7 @@ export function TripForm({
           </button>
         )}
         <button className="primary" disabled={disabled}>
-          {editing ? t("trips.form.save") : t("trips.form.add")}
+          {editing ? t("trips.form.save") : withReturn ? t("trips.form.addWithReturn") : t("trips.form.add")}
         </button>
       </div>
     </form>
@@ -378,7 +431,8 @@ function TripRows({
         </td>
         <td className="num nowrap">{km(trip.km)}</td>
         <td>
-          {trip.from} → {trip.to}
+          {/* Van and Naar are optional; a dash marks the one left empty. */}
+          {(trip.from || trip.to) && `${trip.from || "–"} → ${trip.to || "–"}`}
           {trip.detour && <div className="muted">{t("trips.table.detour", { detour: trip.detour })}</div>}
         </td>
         <td>{t(`purpose.${trip.purpose}`)}</td>

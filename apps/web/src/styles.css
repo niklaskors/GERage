@@ -383,6 +383,7 @@ button.swap:hover {
 
 .trip-form .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   padding-top: 1rem;
@@ -393,6 +394,24 @@ button.swap:hover {
   margin-right: auto;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* "Also return trip": a checkbox beside its text, not a field above an input. */
+.trip-form label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.trip-form label.check input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
 }
 
 .trip-form button.primary,
