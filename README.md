@@ -36,12 +36,12 @@ Every push to `main` deploys automatically via GitHub Actions (`.github/workflow
 GitHub logs in to AWS with OIDC (no stored keys) through the `gerage-github-deploy` role, which only
 trusts the `main` branch of this repo.
 
-The stacks are pinned to account `833741619535`, so deploying with credentials for any other account
-fails. Locally, deploys use the `personal` AWS profile (`~/.aws/credentials`).
+The stacks are pinned to one AWS account (see `infra/bin/gerage.ts`), so deploying with credentials for
+any other account fails. Locally, deploys use the `personal` AWS profile (`~/.aws/credentials`).
 
 ### Infra setup flow
 
-The infra consists of four CDK stacks in AWS account `833741619535`:
+The infra consists of four CDK stacks in that account:
 
 | Stack                | Region         | Deployed by    | Contains                                           |
 | -------------------- | -------------- | -------------- | -------------------------------------------------- |
