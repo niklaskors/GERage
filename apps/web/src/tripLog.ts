@@ -65,6 +65,7 @@ export function totalsByYear(trips: LoggedTrip[]): YearTotals[] {
 export function knownAddresses(trips: Trip[]): string[] {
   const counts = new Map<string, number>();
   for (const address of trips.flatMap((t) => [t.from, t.to])) {
+    if (!address) continue;
     counts.set(address, (counts.get(address) ?? 0) + 1);
   }
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([address]) => address);

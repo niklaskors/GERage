@@ -75,8 +75,15 @@ function CarTrips({
   const editing = trips.find((trip) => trip.id === editingTripId);
   const addresses = knownAddresses(allTrips);
 
-  const addTrip = (fields: TripFields) =>
-    update((d) => ({ ...d, trips: [...d.trips, { id: newId(), carId: car.id, ...fields }] }));
+  /** The return trip comes after the trip there: trips on the same day keep the order they were added in. */
+  const addTrip = (fields: TripFields, returnTrip?: TripFields) =>
+    update((d) => ({
+      ...d,
+      trips: [
+        ...d.trips,
+        ...[fields, returnTrip].filter((f) => f !== undefined).map((f) => ({ id: newId(), carId: car.id, ...f })),
+      ],
+    }));
 
   const saveEdit = async (fields: TripFields) => {
     if (!editing) return;
@@ -85,7 +92,7 @@ function CarTrips({
   };
 
   const deleteTrip = async (trip: Trip) => {
-    if (!confirm(t("trips.confirmDelete", { date: trip.date, from: trip.from, to: trip.to }))) return;
+    if (!confirm(t("trips.confirmDelete", { date: trip.date, from: trip.from || "–", to: trip.to || "–" }))) return;
     await update((d) => ({ ...d, trips: d.trips.filter((other) => other.id !== trip.id) }));
     if (trip.id === editingTripId) setEditingTripId(undefined);
   };
