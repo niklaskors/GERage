@@ -12,6 +12,7 @@ import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import type { Construct } from "constructs";
+import { loginBrandingAssets, loginBrandingSettings } from "./login-branding";
 
 const webDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../apps/web/dist");
 const localOrigin = "http://localhost:5173";
@@ -80,8 +81,10 @@ export class GerageStack extends Stack {
       ],
     });
 
-    // --- Login: invite-only user pool with the Cognito hosted UI ---
+    // --- Login: invite-only user pool with Cognito's managed login pages ---
     const userPool = new cognito.UserPool(this, "UserPool", {
+      // Essentials is the cheapest plan that allows styling the managed login pages.
+      featurePlan: cognito.FeaturePlan.ESSENTIALS,
       selfSignUpEnabled: false,
       signInAliases: { email: true },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
@@ -114,6 +117,7 @@ export class GerageStack extends Stack {
       cognitoDomain: {
         domainPrefix: this.node.tryGetContext("domainPrefix") ?? `gerage-${this.account}`,
       },
+      managedLoginVersion: cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN,
     });
 
     const redirectUrls = [`${appOrigin}/`, `${localOrigin}/`];
@@ -128,6 +132,15 @@ export class GerageStack extends Stack {
       },
       preventUserExistenceErrors: true,
     });
+
+    // A client created through CloudFormation gets no managed login style, so it needs this one.
+    const branding = new cognito.CfnManagedLoginBranding(this, "LoginBranding", {
+      userPoolId: userPool.userPoolId,
+      clientId: userPoolClient.userPoolClientId,
+      settings: loginBrandingSettings,
+      assets: loginBrandingAssets(),
+    });
+    branding.node.addDependency(domain);
 
     // --- Identity pool: trades the login token for AWS credentials scoped to the user's own folder ---
     const identityPool = new identitypool.IdentityPool(this, "IdentityPool", {

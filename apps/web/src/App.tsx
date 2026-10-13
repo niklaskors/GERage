@@ -15,7 +15,7 @@ import { logTrips } from "./tripLog";
 
 export function App({ config }: { config: Config }) {
   const auth = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // The logo takes the colour of the selected car once the cars are loaded.
   const [logoColor, setLogoColor] = useState<CarColor>("blue");
 
@@ -36,7 +36,11 @@ export function App({ config }: { config: Config }) {
               {t("app.loginFailed", { message: auth.error.message })}
             </p>
           )}
-          <button className="sign-in-button" onClick={() => auth.signinRedirect()}>
+          {/* Cognito's login page shows in the same language as the app. */}
+          <button
+            className="sign-in-button"
+            onClick={() => auth.signinRedirect({ extraQueryParams: { lang: i18n.resolvedLanguage ?? "nl" } })}
+          >
             {t("app.signIn")}
           </button>
         </div>

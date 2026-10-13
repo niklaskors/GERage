@@ -14,7 +14,8 @@ infra      AWS CDK stack: hosting, login and data storage
 - **Hosting:** the SPA is served at https://gerage.niklaskors.com from a private S3 bucket through
   CloudFront. The certificate lives in a separate `GerageCertificate` stack in `us-east-1`, because
   CloudFront requires that; the DNS records go into the existing `niklaskors.com` Route 53 zone.
-- **Login:** Cognito user pool with the hosted login page. Sign-up is disabled, so users must be invited.
+- **Login:** Cognito user pool with its managed login page, styled to match the app (`infra/lib/login-branding.ts`).
+  Sign-up is disabled, so users must be invited.
 - **Data:** each user has one JSON file at `s3://<data bucket>/users/<identity id>/data.json`.
   A Cognito identity pool gives the logged-in browser temporary AWS credentials that only allow
   access to that user's own folder. There is no backend.
