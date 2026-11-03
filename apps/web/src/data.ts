@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+
 /** Preset car colours, in the order the colour picker shows them. */
 export const CAR_COLORS = [
   "red",
@@ -35,6 +37,10 @@ export type Car = {
   /** Odometer reading when logging started. Each trip's readings follow from this plus the km before it. */
   startKm: number;
 };
+
+/** Adds km as decimals, so 0.1 + 0.2 is 0.3 and not 0.30000000000000004. */
+export const addKm = (a: number, b: number) => new Decimal(a).plus(b).toNumber();
+export const subtractKm = (a: number, b: number) => new Decimal(a).minus(b).toNumber();
 
 export type Purpose = "business" | "private";
 
@@ -80,7 +86,7 @@ export function migrate(data: GerageData | DataV1): GerageData {
     const readings = data.trips.filter((t) => t.carId === car.id).map((t) => t.startKm);
     return { ...car, startKm: readings.length ? Math.min(...readings) : 0 };
   });
-  const trips = data.trips.map(({ startKm, endKm, ...trip }) => ({ ...trip, km: Math.max(endKm - startKm, 0) }));
+  const trips = data.trips.map(({ startKm, endKm, ...trip }) => ({ ...trip, km: Math.max(subtractKm(endKm, startKm), 0) }));
   return { ...data, version: 2, cars, trips };
 }
 

@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import type { Purpose, Trip } from "./data";
 
 /**
@@ -79,7 +80,7 @@ function mostCommon<T>(values: T[]): T {
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  return sorted.length % 2 ? sorted[mid] : new Decimal(sorted[mid - 1]).plus(sorted[mid]).div(2).toNumber();
 }
 
 /** Levenshtein distance. */

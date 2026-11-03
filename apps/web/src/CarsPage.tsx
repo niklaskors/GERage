@@ -318,9 +318,9 @@ function CarForm({
         {t("cars.startKm")}
         <input
           type="number"
-          inputMode="numeric"
+          inputMode="decimal"
           min={0}
-          step={1}
+          step="any"
           value={startKm}
           onChange={(e) => setStartKm(e.target.value)}
           required
