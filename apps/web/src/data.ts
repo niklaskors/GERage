@@ -36,6 +36,9 @@ export type Car = {
   startKm: number;
 };
 
+/** Rounds km to two decimals, so adding up decimal km doesn't leave float noise like 0.30000000000000004. */
+export const roundKm = (km: number) => Math.round(km * 100) / 100;
+
 export type Purpose = "business" | "private";
 
 /** One row of the trip log (rittenregistratie). */
@@ -80,7 +83,7 @@ export function migrate(data: GerageData | DataV1): GerageData {
     const readings = data.trips.filter((t) => t.carId === car.id).map((t) => t.startKm);
     return { ...car, startKm: readings.length ? Math.min(...readings) : 0 };
   });
-  const trips = data.trips.map(({ startKm, endKm, ...trip }) => ({ ...trip, km: Math.max(endKm - startKm, 0) }));
+  const trips = data.trips.map(({ startKm, endKm, ...trip }) => ({ ...trip, km: roundKm(Math.max(endKm - startKm, 0)) }));
   return { ...data, version: 2, cars, trips };
 }
 

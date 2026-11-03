@@ -1,4 +1,4 @@
-import type { Purpose, Trip } from "./data";
+import { roundKm, type Purpose, type Trip } from "./data";
 
 /**
  * Helpers for the trip form, based on how the paper/Excel trip log is filled in: most trips are a
@@ -79,7 +79,7 @@ function mostCommon<T>(values: T[]): T {
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+  return sorted.length % 2 ? sorted[mid] : roundKm((sorted[mid - 1] + sorted[mid]) / 2);
 }
 
 /** Levenshtein distance. */

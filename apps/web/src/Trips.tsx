@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import type { Purpose, Trip } from "./data";
+import { roundKm, type Purpose, type Trip } from "./data";
 import { findRoute, isPrivatePlaceholder, routesFrom, similarAddress } from "./suggestions";
 import type { EditImpact, LoggedTrip, YearTotals } from "./tripLog";
 
@@ -85,8 +85,8 @@ export function TripForm({
   // Where this trip starts depends on its date (when editing), not on its own km.
   const tripStartKm = impactOf && date ? impactOf({ date, km: 0 }).startKm : startKm;
   const kmSuggested = !kmTyped && route !== undefined;
-  const kmValue = kmSuggested ? String(kmMode === "reading" ? tripStartKm + route.km : route.km) : km;
-  const driven = kmMode === "reading" ? Number(kmValue) - tripStartKm : Number(kmValue);
+  const kmValue = kmSuggested ? String(kmMode === "reading" ? roundKm(tripStartKm + route.km) : route.km) : km;
+  const driven = roundKm(kmMode === "reading" ? Number(kmValue) - tripStartKm : Number(kmValue));
   const fromTypo = similarAddress(from, addresses);
   const toTypo = similarAddress(to, addresses);
   const impact = impactOf && kmValue !== "" && date ? impactOf({ date, km: driven }) : undefined;
@@ -94,7 +94,7 @@ export function TripForm({
   /** Switches what the km field takes, converting what's typed so the trip stays the same. */
   const switchKmMode = () => {
     const next: KmMode = kmMode === "driven" ? "reading" : "driven";
-    if (kmTyped && km !== "") setKm(String(next === "reading" ? tripStartKm + driven : driven));
+    if (kmTyped && km !== "") setKm(String(next === "reading" ? roundKm(tripStartKm + driven) : driven));
     setKmMode(next);
     try {
       localStorage.setItem(KM_MODE_KEY, next);
@@ -138,7 +138,7 @@ export function TripForm({
   }
   if (date > today()) warnings.push({ text: t("trips.hints.dateInFuture") });
   if (route && route.count >= 3 && kmValue !== "" && !detour.trim()) {
-    const extra = driven - route.km;
+    const extra = roundKm(driven - route.km);
     if (extra >= Math.max(3, route.km * 0.15)) {
       warnings.push({
         text: t("trips.hints.longerThanUsual", { extra: kmText(extra), usual: kmText(route.km) }),
@@ -250,9 +250,9 @@ export function TripForm({
           <input
             className={kmSuggested ? "suggested" : undefined}
             type="number"
-            inputMode="numeric"
+            inputMode="decimal"
             min={kmMode === "reading" ? tripStartKm : 0}
-            step={1}
+            step="any"
             value={kmValue}
             onChange={(e) => {
               setKm(e.target.value);
