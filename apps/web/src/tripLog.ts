@@ -1,4 +1,4 @@
-import { roundKm, type Car, type Trip } from "./data";
+import { addKm, subtractKm, type Car, type Trip } from "./data";
 
 export type LoggedTrip = Trip & {
   /** Trip number within its day, starting at 1 (rit-nr). */
@@ -19,7 +19,7 @@ export function logTrips(car: Car, trips: Trip[]): LoggedTrip[] {
   return sorted.map((trip, i) => {
     number = sorted[i - 1]?.date === trip.date ? number + 1 : 1;
     const startKm = odometer;
-    odometer = roundKm(odometer + trip.km);
+    odometer = addKm(odometer, trip.km);
     return { ...trip, number, startKm, endKm: odometer };
   });
 }
@@ -38,7 +38,7 @@ export type EditImpact = {
 export function editImpact(car: Car, trips: LoggedTrip[], id: string, change: { date: string; km: number }): EditImpact {
   const after = logTrips(car, trips.map((trip) => (trip.id === id ? { ...trip, ...change } : trip)));
   const before = new Map(trips.map((trip) => [trip.id, trip.startKm]));
-  const moves = after.filter((trip) => trip.id !== id).map((trip) => roundKm(trip.startKm - before.get(trip.id)!)).filter(Boolean);
+  const moves = after.filter((trip) => trip.id !== id).map((trip) => subtractKm(trip.startKm, before.get(trip.id)!)).filter(Boolean);
   return {
     startKm: after.find((trip) => trip.id === id)!.startKm,
     shifted: moves.length,
@@ -55,7 +55,7 @@ export function totalsByYear(trips: LoggedTrip[]): YearTotals[] {
   for (const trip of trips) {
     const year = trip.date.slice(0, 4);
     const totals = years.get(year) ?? { year, business: 0, private: 0 };
-    totals[trip.purpose] = roundKm(totals[trip.purpose] + trip.km);
+    totals[trip.purpose] = addKm(totals[trip.purpose], trip.km);
     years.set(year, totals);
   }
   return [...years.values()].sort((a, b) => b.year.localeCompare(a.year));

@@ -1,5 +1,5 @@
 import type { CellValue, Workbook, Worksheet } from "exceljs";
-import { roundKm, type Car, type Purpose, type Trip } from "./data";
+import { subtractKm, type Car, type Purpose, type Trip } from "./data";
 import { formatPlate } from "./LicensePlate";
 import type { LoggedTrip } from "./tripLog";
 
@@ -105,10 +105,10 @@ function readSheet(sheet: Worksheet): ImportedCar | undefined {
   const trips: ImportedTrip[] = [];
   let previousEnd: number | undefined;
   for (const [i, { row, date, start = previousEnd ?? raw[i].end, end, trip }] of raw.entries()) {
-    if (previousEnd !== undefined && start !== previousEnd) fixes.push({ kind: "gap", row, km: roundKm(start - previousEnd) });
+    if (previousEnd !== undefined && start !== previousEnd) fixes.push({ kind: "gap", row, km: subtractKm(start, previousEnd) });
     const fixedDate = fixDate(date, trips.at(-1)?.date, raw[i + 1]?.date);
     if (fixedDate !== date) fixes.push({ kind: "date", row, from: date, to: fixedDate });
-    trips.push({ ...trip, date: fixedDate, km: roundKm(Math.max(end - start, 0)) });
+    trips.push({ ...trip, date: fixedDate, km: Math.max(subtractKm(end, start), 0) });
     previousEnd = end;
   }
   const startKm = raw[0].start ?? raw[0].end;
